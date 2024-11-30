@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}My Quotes - QueteMaker{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="text-gradient">My Quotes</h1>
+        <a href="{{ url_for('create_quote') }}" class="btn btn-primary shadow-hover">
+            <i class='bx bx-plus-circle me-2'></i>Create New Quote
+        </a>
+    </div>
+
+    {% if quotes %}
+    <div class="quotes-grid">
+        {% for quote in quotes %}
+        <div class="quote-card">
+            <div class="quote-preview">
+                <img src="{{ url_for('static', filename=quote.image_path) }}" alt="Quote" class="quote-image">
+            </div>
+            <div class="quote-content">
+                <div class="quote-text">{{ quote.content }}</div>
+                {% if quote.author %}
+                <div class="quote-author">- {{ quote.author }}</div>
+                {% endif %}
+            </div>
+            <div class="quote-meta">
+                <div class="quote-date">
+                    <i class='bx bx-calendar me-1'></i>
+                    {{ quote.created_at.strftime('%B %d, %Y') }}
+                </div>
+                <div class="ms-auto">
+                    <a href="{{ url_for('static', filename=quote.image_path) }}" 
+                       class="btn btn-sm btn-outline-primary me-2" 
+                       download>
+                        <i class='bx bx-download'></i>
+                    </a>
+                    <button class="btn btn-sm btn-outline-primary share-btn" 
+                            data-quote-id="{{ quote.id }}">
+                        <i class='bx bx-share-alt'></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class='bx bx-quote-alt-left empty-state-icon'></i>
+        <h3>No quotes yet!</h3>
+        <p class="empty-state-text">Create your first quote to get started.</p>
+        <a href="{{ url_for('create_quote') }}" class="btn btn-primary shadow-hover">
+            <i class='bx bx-plus-circle me-2'></i>Create Quote
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Share Quote</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <label class="form-label">Direct Link</label>
+                    <div class="input-group">
+                        <input type="text" id="shareLink" class="form-control" readonly>
+                        <button class="btn btn-outline-primary copy-btn">
+                            <i class='bx bx-copy'></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="#" class="btn btn-outline-primary" id="shareTwitter" target="_blank">
+                        <i class='bx bxl-twitter me-2'></i>Share on Twitter
+                    </a>
+                    <a href="#" class="btn btn-outline-primary" id="shareFacebook" target="_blank">
+                        <i class='bx bxl-facebook me-2'></i>Share on Facebook
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Share button handling
+    const shareButtons = document.querySelectorAll('.share-btn');
+    const shareModal = new bootstrap.Modal(document.getElementById('shareModal'));
+    const shareLinkInput = document.getElementById('shareLink');
+    const copyBtn = document.querySelector('.copy-btn');
+    const shareTwitterBtn = document.getElementById('shareTwitter');
+    const shareFacebookBtn = document.getElementById('shareFacebook');
+    const toastContainer = document.querySelector('.toast-container');
+
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = message;
+        toastContainer.appendChild(toast);
+
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+
+    shareButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const quoteId = this.dataset.quoteId;
+            const quoteUrl = window.location.origin + '/quote/' + quoteId;
+            
+            // Update share link input
+            shareLinkInput.value = quoteUrl;
+            
+            // Update social share links
+            shareTwitterBtn.href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(quoteUrl)}&text=Check out this beautiful Tigrinya quote!`;
+            shareFacebookBtn.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(quoteUrl)}`;
+            
+            shareModal.show();
+        });
+    });
+
+    // Copy link button
+    copyBtn.addEventListener('click', function() {
+        shareLinkInput.select();
+        document.execCommand('copy');
+        showToast('<i class="bx bx-check me-2"></i>Link copied to clipboard!');
+    });
+
+    // Image lazy loading
+    const images = document.querySelectorAll('.quote-image');
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src;
+                observer.unobserve(img);
+            }
+        });
+    });
+
+    images.forEach(img => {
+        img.dataset.src = img.src;
+        img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+        imageObserver.observe(img);
+    });
+});
+</script>
+{% endblock %}
