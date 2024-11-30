@@ -9,7 +9,7 @@ python-dotenv==1.0.0
 requests==2.31.0
 weasyprint==60.1
 fonttools==4.42.1
-html2canvas==1.4.1
 qrcode==7.4.2
 Pillow-SIMD==9.0.0.post1
 python-magic==0.4.27
+gunicorn
