@@ -14,3 +14,4 @@ qrcode==7.4.2
 Pillow-SIMD==9.0.0.post1
 python-magic==0.4.27
 gunicorn
+email_validator
